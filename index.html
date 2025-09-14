@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktywny Planer Wakacji: Słowacja</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #383838;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 2rem;
+            padding-left: 2.5rem;
+        }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0.4rem;
+            top: 0.25rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 50%;
+            background-color: #86A873;
+            border: 3px solid #FDFBF8;
+            z-index: 10;
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 1rem;
+            top: 0.25rem;
+            width: 2px;
+            height: 100%;
+            background-color: #E0E0E0;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 500px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 500px;
+            }
+        }
+
+        .active-tab {
+            border-color: #86A873;
+            background-color: #86A873;
+            color: #ffffff;
+        }
+
+        .inactive-tab {
+            border-color: #E0E0E0;
+            background-color: #FFFFFF;
+            color: #383838;
+        }
+
+        .active-filter {
+            background-color: #3C6255;
+            color: white;
+        }
+
+        .inactive-filter {
+            background-color: white;
+            color: #3C6255;
+            border: 1px solid #3C6255;
+        }
+
+        .chat-bubble {
+            max-width: 75%;
+            padding: 0.75rem 1rem;
+            border-radius: 1.5rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            word-wrap: break-word;
+        }
+
+        .chat-user {
+            background-color: #3C6255;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 0.25rem;
+        }
+
+        .chat-gemini {
+            background-color: #E0E0E0;
+            color: #383838;
+            align-self: flex-start;
+            border-bottom-left-radius: 0.25rem;
+        }
+
+        .loader {
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3C6255;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="antialiased">
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-gray-800">Słowacja: Planer Wakacji ⛰️</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#base"
+                            class="text-gray-600 hover:text-[#3C6255] px-3 py-2 rounded-md text-sm font-medium">Baza
+                            Wypadowa</a>
+                        <a href="#attractions"
+                            class="text-gray-600 hover:text-[#3C6255] px-3 py-2 rounded-md text-sm font-medium">Atrakcje</a>
+                        <a href="#biking"
+                            class="text-gray-600 hover:text-[#3C6255] px-3 py-2 rounded-md text-sm font-medium">Trasy
+                            Rowerowe</a>
+                        <a href="#plan"
+                            class="text-gray-600 hover:text-[#3C6255] px-3 py-2 rounded-md text-sm font-medium">Plan
+                            Podróży</a>
+                        <a href="#chat"
+                            class="text-gray-600 hover:text-[#3C6255] px-3 py-2 rounded-md text-sm font-medium">Chat z
+                            Gemini</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <section id="intro" class="relative text-center mb-16">
+            <!-- Obraz w tle -->
+            <div class="absolute inset-0">
+              <img src="/obraz.png" alt="Ilustracja rowerzystów w górskim krajobrazie na Słowacji"
+                   class="w-full h-full object-cover rounded-xl shadow-lg">
+              <!-- półtransparentna warstwa -->
+              <div class="absolute inset-0 bg-black bg-opacity-50 rounded-xl"></div>
+            </div>
+          
+            <!-- Treść -->
+            <div class="relative z-10 px-6 py-16 md:py-24 max-w-3xl mx-auto text-white">
+              <h2 class="text-4xl font-bold tracking-tight sm:text-5xl">
+                Odkryj Słowację we wrześniu
+              </h2>
+              <p class="mt-6 text-lg leading-8">
+                Słowacja to idealne miejsce na aktywny wypoczynek łączący trekking, zwiedzanie urokliwych miast i bliskość natury.  
+                Druga połowa września to "babie lato" – stabilna pogoda i piękne kolory w górach.  
+                Ten interaktywny planer pomoże Ci zaplanować idealne dwa tygodnie.
+              </p>
+            </div>
+          </section>
+
+        <section id="base" class="mb-16 scroll-mt-20">
+            <div class="bg-white rounded-xl shadow-lg p-8 md:p-12">
+                <div class="mb-6">
+                    <label for="base-selector" class="block text-gray-700 font-semibold mb-2">Wybierz swoją bazę
+                        wypadową:</label>
+                    <div class="flex flex-wrap gap-3 justify-center md:justify-start my-4" id="base-buttons">
+                        <button
+                            class="base-btn inactive-filter px-4 py-2 rounded-full font-medium transition-colors duration-300"
+                            data-base="Liptowski Mikułasz">
+                            Liptowski Mikułasz
+                        </button>
+                        <button
+                            class="base-btn inactive-filter px-4 py-2 rounded-full font-medium transition-colors duration-300"
+                            data-base="Tatrzańska Łomnica">
+                            Tatrzańska Łomnica
+                        </button>
+                        <button
+                            class="base-btn inactive-filter px-4 py-2 rounded-full font-medium transition-colors duration-300"
+                            data-base="Spišské Tomášovce">
+                            Spišské Tomášovce
+                        </button>
+                    </div>
+
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <span
+                            class="inline-block bg-[#EAE7B1]/50 text-[#3C6255] font-semibold px-3 py-1 rounded-full mb-4 text-sm">Baza
+                            Wypadowa</span>
+                        <h3 id="base-title" class="text-3xl font-bold text-gray-900 mb-4">Propozycja: Liptowski Mikułasz
+                        </h3>
+                        <p id="base-description" class="text-gray-600 mb-6">To miasto jest strategicznie położone w
+                            sercu regionu Liptów. Wybierając je jako bazę, macie wszystkie najważniejsze pasma górskie i
+                            atrakcje w zasięgu krótkiej, malowniczej podróży samochodem. To idealny kompromis między
+                            bliskością szlaków a dostępem do miejskiej infrastruktury.</p>
+                        <ul id="base-pros" class="space-y-3 text-gray-700">
+                            <li class="flex items-start"><span class="text-green-600 mr-3 mt-1">✓</span> <span><b>Tatry
+                                        Wysokie i Zachodnie:</b> ok. 30-45 minut jazdy do początku szlaków.</span></li>
+                            <li class="flex items-start"><span class="text-green-600 mr-3 mt-1">✓</span> <span><b>Tatry
+                                        Niskie (Chopok):</b> ok. 20 minut jazdy do Doliny Demianowskiej.</span></li>
+                            <li class="flex items-start"><span class="text-green-600 mr-3 mt-1">✓</span> <span><b>Mała
+                                        Fatra i Słowacki Raj:</b> ok. 1 godziny jazdy.</span></li>
+                            <li class="flex items-start"><span class="text-green-600 mr-3 mt-1">✓</span>
+                                <span><b>Bliskość atrakcji:</b> Jezioro Liptowska Mara, jaskinie, parki wodne.</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="drivingTimeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="attractions" class="mb-16 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center mb-2 text-gray-900">Co zwiedzić i gdzie wędrować?</h3>
+            <p id="attractions-description" class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Wybierz kategorię,
+                aby zobaczyć propozycje szlaków, miast i zamków. Wszystkie atrakcje są w zasięgu do 2 godzin jazdy od
+                Liptowskiego Mikułasza.</p>
+            <div class="flex justify-center space-x-2 md:space-x-4 mb-8" id="attraction-tabs">
+                <button data-tab="mountains"
+                    class="tab-button active-tab text-sm md:text-base font-semibold py-2 px-4 rounded-full border-2 transition-all duration-300">⛰️
+                    Góry i Szlaki</button>
+                <button data-tab="cities"
+                    class="tab-button inactive-tab text-sm md:text-base font-semibold py-2 px-4 rounded-full border-2 transition-all duration-300">🏰
+                    Miasta i Zabytki</button>
+            </div>
+
+            <div id="mountains-content" class="attraction-content">
+                <div class="flex justify-center space-x-2 md:space-x-4 mb-8" id="difficulty-filters">
+                    <button data-filter="all"
+                        class="filter-button active-filter text-xs md:text-sm font-semibold py-2 px-4 rounded-full transition-all duration-300">Wszystkie</button>
+                    <button data-filter="łatwy"
+                        class="filter-button inactive-filter text-xs md:text-sm font-semibold py-2 px-4 rounded-full transition-all duration-300">Łatwe</button>
+                    <button data-filter="średni"
+                        class="filter-button inactive-filter text-xs md:text-sm font-semibold py-2 px-4 rounded-full transition-all duration-300">Średnie</button>
+                    <button data-filter="wymagający"
+                        class="filter-button inactive-filter text-xs md:text-sm font-semibold py-2 px-4 rounded-full transition-all duration-300">Wymagające</button>
+                </div>
+                <div id="mountains-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                </div>
+            </div>
+
+            <div id="cities-content" class="attraction-content hidden">
+                <div id="cities-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                </div>
+            </div>
+        </section>
+
+        <section id="biking" class="mb-16 scroll-mt-20">
+            <div class="bg-white rounded-xl shadow-lg p-8 md:p-12">
+                <h3 class="text-3xl font-bold text-center mb-2 text-gray-900">Słowackie trasy w stylu "Velo"</h3>
+                <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Pytaliście o trasy rowerowe podobne do Velo
+                    Czorsztyn. Słowacja ma kilka perełek, które oferują podobne wrażenia: świetnie przygotowane ścieżki,
+                    piękne widoki i infrastrukturę. Oto dwie najciekawsze propozycje w regionie:</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                    <div class="border border-gray-200 rounded-lg p-6 hover:shadow-xl transition-shadow">
+                        <h4 class="text-xl font-bold text-[#3C6255] mb-2">Ważska Magistrala Rowerowa (Vážska
+                            cyklomagistrála)</h4>
+                        <p class="text-gray-600">To długa trasa biegnąca wzdłuż rzeki Wag. Odcinek w okolicach Liptowa
+                            jest szczególnie malowniczy. Prowadzi wokół jeziora Liptowska Mara, oferując piękne widoki
+                            na Tatry Niskie i Zachodnie. Trasa jest w większości płaska, asfaltowa, idealna na
+                            rekreacyjną przejażdżkę. Można ją porównać do odcinków Velo Dunajec biegnących wzdłuż rzeki.
+                        </p>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg p-6 hover:shadow-xl transition-shadow">
+                        <h4 class="text-xl font-bold text-[#3C6255] mb-2">Orawska Trasa Rowerowa (Oravská cyklotrasa)
+                        </h4>
+                        <p class="text-gray-600">Trasa prowadzi wokół Jeziora Orawskiego, niedaleko granicy z Polską.
+                            Jest to pętla, która łączy Słowację i Polskę (łącząc się z trasą wokół Jeziora
+                            Czorsztyńskiego!). Oferuje przepiękne panoramy, bliskość wody i gór. Charakterem i widokami
+                            bardzo przypomina Velo Czorsztyn. Odcinek Trzciana - Namiestów jest świetnie przygotowany.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="plan" class="scroll-mt-20 mb-16">
+            <h3 class="text-3xl font-bold text-center mb-2 text-gray-900">Przykładowy plan na 14 dni</h3>
+            <p id="plan-description" class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">To luźna propozycja,
+                którą możecie dowolnie modyfikować. Łączy dni aktywne w górach ze zwiedzaniem i czasem na odpoczynek.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                <div id="plan-week-1"></div>
+                <div id="plan-week-2"></div>
+            </div>
+        </section>
+
+        <section id="chat" class="scroll-mt-20">
+            <div class="bg-white rounded-xl shadow-lg p-8 md:p-12 flex flex-col h-[70vh] md:h-[80vh]">
+                <h3 class="text-3xl font-bold text-center text-gray-900 mb-6">Zapytaj Gemini o Słowację</h3>
+                <div id="chat-messages" class="flex-grow overflow-y-auto pr-4 custom-scrollbar flex flex-col-reverse">
+                    <div class="flex justify-start">
+                        <div class="chat-bubble chat-gemini max-w-md">Witaj! Jestem tu, by pomóc Ci w planowaniu podróży
+                            na Słowację. O co chcesz zapytać?</div>
+                    </div>
+                </div>
+                <div id="loading-indicator" class="loader mt-4 self-center hidden"></div>
+                <div class="flex mt-6">
+                    <input type="text" id="chat-input"
+                        class="flex-grow border-2 border-gray-300 rounded-full px-5 py-3 focus:outline-none focus:border-[#3C6255]"
+                        placeholder="Zadaj pytanie (np. jaka jest pogoda w Tatrach we wrześniu?)" />
+                    <button id="chat-send"
+                        class="ml-4 px-6 py-3 bg-[#3C6255] text-white rounded-full font-semibold hover:bg-[#2e4c41] transition-colors duration-300">Wyślij</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto px-8 py-6 text-center">
+            <p>&copy; 2025 Interaktywny Planer Podróży. Miłych wakacji na Słowacji!</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const baseData = {
+                'Liptowski Mikułasz': {
+                    title: 'Liptowski Mikułasz',
+                    description: 'To miasto jest strategicznie położone w sercu regionu Liptów. Wybierając je jako bazę, macie wszystkie najważniejsze pasma górskie i atrakcje w zasięgu krótkiej, malowniczej podróży samochodem. To idealny kompromis między bliskością szlaków a dostępem do miejskiej infrastruktury.',
+                    pros: [
+                        '<b>Tatry Wysokie i Zachodnie:</b> ok. 30-45 minut jazdy do początku szlaków.',
+                        '<b>Tatry Niskie (Chopok):</b> ok. 20 minut jazdy do Doliny Demianowskiej.',
+                        '<b>Mała Fatra i Słowacki Raj:</b> ok. 1 godziny jazdy.',
+                        '<b>Bliskość atrakcji:</b> Jezioro Liptowska Mara, jaskinie, parki wodne.'
+                    ],
+                    driveTimes: {
+                        labels: ['Tatry Wysokie', 'Tatry Niskie', 'Mała Fatra', 'Słowacki Raj', 'Zamek Orawski', 'Bańska Szczawnica', 'Koszyce'],
+                        data: [45, 20, 60, 70, 60, 90, 120]
+                    },
+                    itinerary: [
+                        { day: 1, title: 'Przyjazd i aklimatyzacja', description: 'Zakwaterowanie w Liptowskim Mikułaszu, spacer po mieście, kolacja w lokalnej restauracji.' },
+                        { day: 2, title: 'Tatry Niskie: Dolina Demianowska', description: 'Lekki trekking, zwiedzanie Jaskini Wolności lub Lodowej.' },
+                        { day: 3, title: 'Dzień z historią: Zamek Orawski', description: 'Wycieczka na jeden z najpiękniejszych zamków Słowacji, po drodze tradycyjny obiad.' },
+                        { day: 4, title: 'Tatry Wysokie dla początkujących', description: 'Wycieczka do Szczyrbskiego Jeziora i spacer do Popradzkiego Stawu.' },
+                        { day: 5, title: 'Relaks i regeneracja', description: 'Odpoczynek, wizyta w aquaparku Tatralandia lub Besenova.' },
+                        { day: 6, title: 'Mała Fatra: Janosikowe Diery', description: 'Przejście przez system wąwozów z drabinkami i wodospadami - świetna zabawa.' },
+                        { day: 7, title: 'Kultura UNESCO: Bańska Szczawnica', description: 'Całodniowa wycieczka do klimatycznego, historycznego miasta górniczego.' },
+                        { day: 8, title: 'Rowerem wokół Liptowskiej Mary', description: 'Rekreacyjna wycieczka rowerowa Ważską Magistralą.' },
+                        { day: 9, title: 'Słowacki Raj: Przełom Hornadu', description: 'Trekking z dreszczykiem emocji po metalowych półkach nad rzeką.' },
+                        { day: 10, title: 'Dzień miejski: Koszyce', description: 'Wycieczka na wschód Słowacji, by zwiedzić piękną starówkę Koszyc.' },
+                        { day: 11, title: 'Tatry Zachodnie: trekking', description: 'Dłuższa wycieczka górska, np. na Rohacze lub w rejonie Salatynów.' },
+                        { day: 12, title: 'Historia na wielką skalę: Zamek Spiski', description: 'Zwiedzanie monumentalnych ruin zamku i Spiskiej Kapituły.' },
+                        { day: 13, title: 'Ostatni trekking lub zakupy', description: 'Krótki spacer w góry po pamiątki lub po prostu relaks przed wyjazdem.' },
+                        { day: 14, title: 'Wyjazd', description: 'Po śniadaniu powrót do domu.' }
+                    ]
+                },
+                'Tatrzańska Łomnica': {
+                    title: 'Tatrzańska Łomnica',
+                    description: 'Tatrzańska Łomnica to jedna z najpiękniejszych i najbardziej znanych miejscowości w Wysokich Tatrach. To idealna baza dla tych, którzy chcą skupić się na szlakach wysokogórskich i zależy im na minimalizacji czasu dojazdu do ich początków. To turystyczne centrum z bogatą infrastrukturą.',
+                    pros: [
+                        '<b>Tatry Wysokie:</b> bezkonkurencyjna bliskość do szlaków (Lomnický štít, Skalnaté pleso) i pięknych tatrzańskich dolin.',
+                        '<b>Bliskość miasteczek:</b> łatwy dojazd do Starego Smokowca, Popradu i Kieżmarku.',
+                        '<b>Idealna baza</b> dla miłośników Tatr i górskich widoków.',
+                        '<b>Dobry dostęp</b> do infrastruktury turystycznej: restauracje, kawiarnie, sklepy.'
+                    ],
+                    driveTimes: {
+                        labels: ['Tatry Wysokie', 'Tatry Niskie', 'Słowacki Raj', 'Zamek Spiski', 'Bańska Szczawnica', 'Koszyce'],
+                        data: [15, 60, 45, 40, 150, 90]
+                    },
+                    itinerary: [
+                        { day: 1, title: 'Przyjazd i aklimatyzacja', description: 'Zakwaterowanie w Tatrzańskiej Łomnicy, spacer po urokliwym miasteczku, kolacja.' },
+                        { day: 2, title: 'Wycieczka na Łomnicki Staw', description: 'Wjazd kolejką na Skalnaté pleso, stamtąd wycieczka piesza lub widoki.' },
+                        { day: 3, title: 'Dzień miejski: Poprad', description: 'Zwiedzanie Popradu z historycznym centrum i aquaparkiem AquaCity.' },
+                        { day: 4, title: 'Szlak wokół Popradzkiego Stawu', description: 'Krótsza i malownicza wycieczka w Wysokich Tatrach, idealna na rozgrzewkę.' },
+                        { day: 5, title: 'Relaks i regeneracja', description: 'Odpoczynek w ośrodku wellness lub wizyta w lokalnej kawiarni.' },
+                        { day: 6, title: 'Szlak na Krywań', description: 'Wymagający, ale bardzo satysfakcjonujący trekking na słowacki "szczyt narodowy".' },
+                        { day: 7, title: 'Historia: Zamek w Kieżmarku', description: 'Wycieczka do pobliskiego Kieżmarku, zwiedzanie zamku i drewnianego kościoła.' },
+                        { day: 8, title: 'Dolina Kościeliska (PL)', description: 'Jednodniowa wycieczka po polskiej stronie Tatr (dojazd około 1,5h).' },
+                        { day: 9, title: 'Zamek Spiski i Spiska Kapituła', description: 'Zwiedzanie największego kompleksu zamkowego w Europie Środkowej.' },
+                        { day: 10, title: 'Spacer po Tatrach', description: 'Wybór jednego z wielu mniej znanych szlaków w okolicy, np. Dolina Białej Wody.' },
+                        { day: 11, title: 'Słowacki Raj: Suchá Belá', description: 'Wymagający, ale spektakularny szlak z wodospadami i kładkami.' },
+                        { day: 12, title: 'Z wizytą w Koszycach', description: 'Wycieczka do drugiego co do wielkości miasta Słowacji z piękną starówką.' },
+                        { day: 13, title: 'Ostatnie widoki', description: 'Przejazd do Chaty Plesnivec lub inny, lekki szlak przed wyjazdem.' },
+                        { day: 14, title: 'Wyjazd', description: 'Po śniadaniu powrót do domu.' }
+                    ]
+                },
+                'Spišské Tomášovce': {
+                    title: 'Spišské Tomášovce',
+                    description: 'To mała wieś strategicznie położona u wejścia do Słowackiego Raju. Jest to idealna baza dla tych, którzy chcą skupić się na tym unikalnym regionie. Spišské Tomášovce oferuje spokój i bliskość natury, z dala od zgiełku większych miast.',
+                    pros: [
+                        '<b>Słowacki Raj:</b> bezpośrednia bliskość do szlaków (Przełom Hornadu, Suchá Belá).',
+                        '<b>Idealna baza</b> dla miłośników natury i pieszych wędrówek, a szczególnie tych, którzy chcą odkrywać jaskinie i wodospady Słowackiego Raju.',
+                        '<b>Bliskość zabytków:</b> bardzo krótki dojazd do Zamku Spiskiego i Spiskiej Kapituły.',
+                        '<b>Łatwy dostęp do miast:</b> bliskość do Popradu i Kieżmarku.'
+                    ],
+                    driveTimes: {
+                        labels: ['Słowacki Raj', 'Tatry Wysokie', 'Tatry Niskie', 'Koszyce', 'Zamek Spiski', 'Mała Fatra'],
+                        data: [5, 40, 80, 70, 20, 100]
+                    },
+                    itinerary: [
+                        { day: 1, title: 'Przyjazd i aklimatyzacja', description: 'Zakwaterowanie, spacer po okolicy, rozpoznanie wejścia do Słowackiego Raju.' },
+                        { day: 2, title: 'Słowacki Raj: Suchá Belá', description: 'Wymagający, ale spektakularny szlak z wodospadami i drabinami - klasyk regionu.' },
+                        { day: 3, title: 'Historia: Zamek Spiski', description: 'Zwiedzanie monumentalnych ruin największego zamku na Słowacji.' },
+                        { day: 4, title: 'Słowacki Raj: Przełom Hornadu', description: 'Wędrówka wzdłuż rzeki po metalowych półkach i kładkach.' },
+                        { day: 5, title: 'Relaks i regeneracja', description: 'Odpoczynek lub wizyta w aquaparku AquaCity w Popradzie.' },
+                        { day: 6, title: 'Tatry Wysokie: Popradzki Staw', description: 'Wycieczka do Szczyrbskiego Jeziora i spacer do Popradzkiego Stawu.' },
+                        { day: 7, title: 'Kultura UNESCO: Lewocza', description: 'Zwiedzanie zabytkowego miasta Lewocza, wpisanego na listę UNESCO.' },
+                        { day: 8, title: 'Wycieczka rowerowa po okolicy', description: 'Wybierz trasę rekreacyjną np. wzdłuż rzeki Hornad.' },
+                        { day: 9, title: 'Słowacki Raj: Kláštorisko', description: 'Lżejsza trasa do ruin klasztoru z pięknymi widokami.' },
+                        { day: 10, title: 'Dzień miejski: Koszyce', description: 'Całodniowa wycieczka do drugiego co do wielkości miasta Słowacji.' },
+                        { day: 11, title: 'Mała Fatra: Janosikowe Diery', description: 'Przejazd w rejon Małej Fatry na szlak pełen wąwozów.' },
+                        { day: 12, title: 'Atrakcje przyrodnicze: Jaskinie', description: 'Zwiedzanie jednej z pobliskich jaskiń np. Dobszyńskiej Lodowej Jaskini.' },
+                        { day: 13, title: 'Ostatni trekking lub zakupy', description: 'Krótki spacer w góry po pamiątki lub po prostu relaks przed wyjazdem.' },
+                        { day: 14, title: 'Wyjazd', description: 'Po śniadaniu powrót do domu.' }
+                    ]
+                }
+            };
+
+            const mountains = [
+                { name: 'Dolina Kościeliska i Smutna Przełęcz', range: 'Tatry Zachodnie', time: '6-7h', difficulty: 'średni' },
+                { name: 'Krywań', range: 'Tatry Wysokie', time: '8h', difficulty: 'wymagający' },
+                { name: 'Szczyrbskie Jezioro - Popradzki Staw', range: 'Tatry Wysokie', time: '3h', difficulty: 'łatwy' },
+                { name: 'Chopok od południa (Trangoška)', range: 'Tatry Niskie', time: '5-6h', difficulty: 'średni' },
+                { name: 'Wielki Rozsutec', range: 'Mała Fatra', time: '6-7h', difficulty: 'wymagający' },
+                { name: 'Janosikowe Diery', range: 'Mała Fatra', time: '3-4h', difficulty: 'łatwy' },
+                { name: 'Przełom Hornadu', range: 'Słowacki Raj', time: '4-5h', difficulty: 'średni' },
+                { name: 'Dolina Demianowska (do jaskini)', range: 'Tatry Niskie', time: '2h', difficulty: 'łatwy' },
+            ];
+
+            const cities = [
+                { name: 'Koszyce', type: 'Miasto', drive: '~2h', description: 'Drugie co do wielkości miasto Słowacji z piękną starówką i Katedrą św. Elżbiety.' },
+                { name: 'Bańska Szczawnica', type: 'Miasto', drive: '~1.5h', description: 'Historyczne miasto górnicze wpisane na listę UNESCO, z niezwykłym klimatem.' },
+                { name: 'Zamek Orawski', type: 'Zamek', drive: '~1h', description: 'Imponujący zamek na skale, jeden z najpiękniejszych w Europie.' },
+                { name: 'Zamek Spiski i Spiska Kapituła', type: 'Zamek', drive: '~1.5h', description: 'Ogromny kompleks zamkowy (UNESCO) i "słowacki Watykan".' },
+                { name: 'Kieżmark', type: 'Miasto', drive: '~1h', description: 'Urokliwe miasteczko z zamkiem i drewnianym kościołem artykularnym (UNESCO).' },
+                { name: 'Vlkolínec', type: 'Skansen', drive: '~30min', description: 'Żywy skansen - wieś z oryginalną drewnianą zabudową, wpisana na listę UNESCO.' },
+            ];
+
+            const mountainsGrid = document.getElementById('mountains-grid');
+            const citiesGrid = document.getElementById('cities-grid');
+            const planWeek1 = document.getElementById('plan-week-1');
+            const planWeek2 = document.getElementById('plan-week-2');
+            const baseTitle = document.getElementById('base-title');
+            const baseDescription = document.getElementById('base-description');
+            const baseButtons = document.querySelectorAll('.base-btn');
+
+            const basePros = document.getElementById('base-pros');
+            const attractionsDescription = document.getElementById('attractions-description');
+            let myChart;
+
+            const createMountainCard = (mountain) => `
+                <div class="bg-white rounded-lg shadow p-6 border border-gray-100 hover:shadow-lg transition-shadow relative">
+                    <h4 class="font-bold text-lg text-gray-800">${mountain.name}</h4>
+                    <p class="text-sm text-gray-500 mb-3">${mountain.range}</p>
+                    <div class="flex space-x-4 text-sm">
+                        <span class="font-medium">🕒 ${mountain.time}</span>
+                        <span class="font-medium capitalize px-2 py-0.5 rounded-full ${mountain.difficulty === 'łatwy' ? 'bg-green-100 text-green-800' : mountain.difficulty === 'średni' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}">${mountain.difficulty}</span>
+                    </div>
+                </div>`;
+
+            const createCityCard = (city) => `
+                <div class="bg-white rounded-lg shadow p-6 border border-gray-100 hover:shadow-lg transition-shadow relative">
+                    <h4 class="font-bold text-lg text-gray-800">${city.name}</h4>
+                    <p class="text-sm text-gray-500 mb-3">${city.type} - dojazd ${city.drive}</p>
+                    <p class="text-gray-600 text-sm">${city.description}</p>
+                </div>`;
+
+            const createPlanItem = (item) => `
+                <div class="timeline-item">
+                    <h4 class="font-bold text-lg text-gray-800">Dzień ${item.day}: ${item.title}</h4>
+                    <p class="text-gray-600 text-sm">${item.description}</p>
+                </div>`;
+
+            function renderMountains(filter = 'all') {
+                mountainsGrid.innerHTML = '';
+                const filteredMountains = filter === 'all'
+                    ? mountains
+                    : mountains.filter(m => m.difficulty === filter);
+                filteredMountains.forEach(m => mountainsGrid.innerHTML += createMountainCard(m));
+            }
+
+            function renderCities() {
+                citiesGrid.innerHTML = '';
+                cities.forEach(c => citiesGrid.innerHTML += createCityCard(c));
+            }
+
+            function renderPlan(itinerary) {
+                planWeek1.innerHTML = `<h4 class="text-2xl font-bold mb-4 text-center md:text-left text-gray-800">Tydzień 1</h4>`;
+                planWeek2.innerHTML = `<h4 class="text-2xl font-bold mb-4 text-center md:text-left text-gray-800">Tydzień 2</h4>`;
+                itinerary.forEach(item => {
+                    if (item.day <= 7) {
+                        planWeek1.innerHTML += createPlanItem(item);
+                    } else {
+                        planWeek2.innerHTML += createPlanItem(item);
+                    }
+                });
+            }
+
+            function updateUI(baseName) {
+                const data = baseData[baseName];
+
+                // Update Base Section
+                baseTitle.textContent = `Propozycja: ${data.title}`;
+                baseDescription.textContent = data.description;
+                basePros.innerHTML = '';
+                data.pros.forEach(item => {
+                    const li = document.createElement('li');
+                    li.classList.add('flex', 'items-start');
+                    li.innerHTML = `<span class="text-green-600 mr-3 mt-1">✓</span> <span>${item}</span>`;
+                    basePros.appendChild(li);
+                });
+
+                // Update Attractions Section
+                attractionsDescription.textContent = `Wybierz kategorię, aby zobaczyć propozycje szlaków, miast i zamków. Wszystkie atrakcje są w zasięgu do 2 godzin jazdy od ${baseName}.`;
+
+                // Update Chart
+                myChart.data.labels = data.driveTimes.labels;
+                myChart.data.datasets[0].data = data.driveTimes.data;
+                myChart.options.plugins.title.text = `Czas dojazdu z ${baseName}`;
+                myChart.update();
+
+                // Update Itinerary
+                renderPlan(data.itinerary);
+            }
+
+            const ctx = document.getElementById('drivingTimeChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Szacowany czas dojazdu (w minutach)',
+                        data: [],
+                        backgroundColor: [
+                            'rgba(60, 98, 85, 0.7)',
+                            'rgba(134, 168, 115, 0.7)',
+                            'rgba(168, 199, 132, 0.7)',
+                            'rgba(234, 231, 177, 0.8)',
+                            'rgba(210, 200, 150, 0.7)',
+                            'rgba(180, 160, 120, 0.7)',
+                            'rgba(150, 130, 100, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(60, 98, 85, 1)',
+                            'rgba(134, 168, 115, 1)',
+                            'rgba(168, 199, 132, 1)',
+                            'rgba(234, 231, 177, 1)',
+                            'rgba(210, 200, 150, 1)',
+                            'rgba(180, 160, 120, 1)',
+                            'rgba(150, 130, 100, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: ''
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Minuty'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Start – ustaw pierwszą bazę jako aktywną
+            updateUI("Liptowski Mikułasz");
+            document.querySelector('[data-base="Liptowski Mikułasz"]').classList.add('active-filter');
+            document.querySelector('[data-base="Liptowski Mikułasz"]').classList.remove('inactive-filter');
+
+            // Obsługa kliknięć
+            baseButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const baseName = btn.dataset.base;
+                    updateUI(baseName);
+
+                    // Podświetlanie aktywnego przycisku
+                    baseButtons.forEach(b => {
+                        b.classList.remove('active-filter');
+                        b.classList.add('inactive-filter');
+                    });
+                    btn.classList.add('active-filter');
+                    btn.classList.remove('inactive-filter');
+                });
+            });
+
+
+            // Existing logic
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            const tabs = document.querySelectorAll('.tab-button');
+            const contents = document.querySelectorAll('.attraction-content');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => {
+                        t.classList.remove('active-tab');
+                        t.classList.add('inactive-tab');
+                    });
+                    tab.classList.add('active-tab');
+                    tab.classList.remove('inactive-tab');
+
+                    contents.forEach(content => content.classList.add('hidden'));
+                    document.getElementById(tab.dataset.tab + '-content').classList.remove('hidden');
+                });
+            });
+
+            const filters = document.querySelectorAll('.filter-button');
+            filters.forEach(filter => {
+                filter.addEventListener('click', () => {
+                    filters.forEach(f => {
+                        f.classList.remove('active-filter');
+                        f.classList.add('inactive-filter');
+                    });
+                    filter.classList.add('active-filter');
+                    filter.classList.remove('inactive-filter');
+                    renderMountains(filter.dataset.filter);
+                });
+            });
+
+            renderMountains();
+            renderCities();
+
+            const chatMessages = document.getElementById('chat-messages');
+            const chatInput = document.getElementById('chat-input');
+            const chatSendBtn = document.getElementById('chat-send');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const chatApiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=';
+            const apiKey = '';
+
+            const addMessageToChat = (message, role) => {
+                const messageBubble = document.createElement('div');
+                messageBubble.classList.add('chat-bubble');
+                if (role === 'user') {
+                    messageBubble.classList.add('chat-user', 'self-end');
+                } else {
+                    messageBubble.classList.add('chat-gemini', 'self-start');
+                }
+                messageBubble.innerHTML = message.replace(/\n/g, '<br>');
+                chatMessages.appendChild(messageBubble);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            };
+
+            const sendMessage = async () => {
+                const prompt = chatInput.value.trim();
+                if (prompt === '') return;
+
+                addMessageToChat(prompt, 'user');
+                chatInput.value = '';
+                loadingIndicator.classList.remove('hidden');
+
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                };
+
+                try {
+                    const response = await fetch(chatApiUrl + apiKey, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || 'Przepraszam, coś poszło nie tak. Spróbuj ponownie.';
+                    addMessageToChat(aiResponse, 'gemini');
+                } catch (error) {
+                    addMessageToChat('Przepraszam, wystąpił problem z połączeniem. Spróbuj ponownie później.', 'gemini');
+                } finally {
+                    loadingIndicator.classList.add('hidden');
+                }
+            };
+
+            chatSendBtn.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
