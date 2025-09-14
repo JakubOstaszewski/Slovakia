@@ -137,9 +137,23 @@
     <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
         <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
+                <!-- Logo / Tytuł -->
                 <div class="flex-shrink-0">
                     <h1 class="text-xl font-bold text-gray-800">Słowacja: Planer Wakacji ⛰️</h1>
                 </div>
+
+                <!-- Hamburger (mobilny) -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-800 focus:outline-none">
+                        <!-- Ikona hamburgera -->
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Menu desktop -->
                 <div class="hidden md:block">
                     <div class="ml-10 flex items-baseline space-x-4">
                         <a href="#base"
@@ -153,9 +167,23 @@
                         <a href="#plan"
                             class="text-gray-600 hover:text-[#3C6255] px-3 py-2 rounded-md text-sm font-medium">Plan
                             Podróży</a>
-
                     </div>
                 </div>
+            </div>
+
+            <!-- Menu mobilne -->
+            <div id="mobile-menu" class="hidden md:hidden mt-2 space-y-1">
+                <a href="#base"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-[#3C6255]">Baza
+                    Wypadowa</a>
+                <a href="#attractions"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-[#3C6255]">Atrakcje</a>
+                <a href="#biking"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-[#3C6255]">Trasy
+                    Rowerowe</a>
+                <a href="#plan"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-[#3C6255]">Plan
+                    Podróży</a>
             </div>
         </nav>
     </header>
@@ -164,25 +192,26 @@
         <section id="intro" class="relative text-center mb-16">
             <!-- Obraz w tle -->
             <div class="absolute inset-0">
-              <img src="obraz.png" alt="Ilustracja rowerzystów w górskim krajobrazie na Słowacji"
-                   class="w-full h-full object-cover rounded-xl shadow-lg">
-              <!-- półtransparentna warstwa -->
-              <div class="absolute inset-0 bg-black bg-opacity-50 rounded-xl"></div>
+                <img src="obraz.png" alt="Ilustracja rowerzystów w górskim krajobrazie na Słowacji"
+                    class="w-full h-full object-cover rounded-xl shadow-lg">
+                <!-- półtransparentna warstwa -->
+                <div class="absolute inset-0 bg-black bg-opacity-50 rounded-xl"></div>
             </div>
-          
+
             <!-- Treść -->
             <div class="relative z-10 px-6 py-16 md:py-24 max-w-3xl mx-auto text-white">
-              <h2 class="text-4xl font-bold tracking-tight sm:text-5xl">
-                Odkryj Słowację we wrześniu
-              </h2>
-              <p class="mt-6 text-lg leading-8">
-                Słowacja to idealne miejsce na aktywny wypoczynek łączący trekking, zwiedzanie urokliwych miast i bliskość natury.
-                Druga połowa września to "babie lato" – stabilna pogoda i piękne kolory w górach.
-                Ten interaktywny planer pomoże Ci zaplanować idealne dwa tygodnie.
-              </p>
+                <h2 class="text-4xl font-bold tracking-tight sm:text-5xl">
+                    Odkryj Słowację we wrześniu
+                </h2>
+                <p class="mt-6 text-lg leading-8">
+                    Słowacja to idealne miejsce na aktywny wypoczynek łączący trekking, zwiedzanie urokliwych miast i
+                    bliskość natury.
+                    Druga połowa września to "babie lato" – stabilna pogoda i piękne kolory w górach.
+                    Ten interaktywny planer pomoże Ci zaplanować idealne dwa tygodnie.
+                </p>
             </div>
-          </section>
-          
+        </section>
+
 
         <section id="base" class="mb-16 scroll-mt-20">
             <div class="bg-white rounded-xl shadow-lg p-8 md:p-12">
@@ -704,6 +733,15 @@
                 }
             });
         });
+
+        const btn = document.getElementById('mobile-menu-button');
+        const menu = document.getElementById('mobile-menu');
+
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+
+
     </script>
 </body>
 
